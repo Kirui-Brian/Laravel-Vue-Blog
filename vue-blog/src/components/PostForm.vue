@@ -134,7 +134,8 @@ export default {
 
 <style scoped>
 .post-form {
-    max-width: 800px;
+    width: 800px;
+    height: 600px;
     margin: 0 auto;
     padding: 20px;
     border: 1px solid #ccc;
