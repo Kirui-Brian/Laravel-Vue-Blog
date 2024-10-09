@@ -2,17 +2,19 @@
     <div class="author-posts-container">
         <h1 v-if="authorName">Posts by {{ authorName }}</h1>
         <p v-else>Loading Posts...</p>
-        <button @click="deleteSelected" class="bulk-delete-button" :disabled="!selectedPosts.length">Delete Selected</button>
+
+        <button @click="confirmBulkDelete" class="bulk-delete-button" :disabled="!selectedPosts.length">Delete Selected</button>
+        
         <div v-if="posts.length > 0">
             <div v-for="post in posts" :key="post?.id" class="post-card">
                 <input type="checkbox" v-model="selectedPosts" :value="post.id" />
                 <router-link :to="`/posts/${post?.id}`" class="post-title">{{ post?.title }}</router-link>
                 <p class="post-body">{{ post?.body }}</p>
                 <div class="post-actions">
-                    <button @click="editPost(post.id)" class="edit-button">
+                    <button @click="openEditModal(post)" class="edit-button">
                         <i class="fa fa-edit"></i> Edit ✏️
                     </button>
-                    <button @click="confirmDelete(post.id)" class="delete-button">
+                    <button @click="confirmDelete(post)" class="delete-button">
                         <i class="fa fa-trash"></i> Delete  🗑️
                     </button>
                 </div>
@@ -20,7 +22,41 @@
         </div>
         <p v-else-if="!error">No posts found for this author.</p>
         <p v-if="error" class="error-message">{{ error }}</p>
+
         <router-link to="/" class="back-link">Back to Posts</router-link>
+
+        <!-- Edit Post Modal -->
+         <div v-if="isEditModalOpen" class="modal">
+            <div class="modal-content">
+                <h3>Edit Post</h3>
+                <label for="edit-title">Title:</label>
+                <input v-model="editPost.title" id="edit-title">
+
+                <label for="edit-body">Body</label>
+                <textarea v-model="editPost.body" id="edit-body"></textarea>
+
+                <button @click="saveEdit" >Save Changes</button>
+                <button @click="closeEditModal" >Cancel</button>
+            </div>
+         </div>
+
+         <!-- Delete Confirmation Modal -->
+          <div v-if="isDeleteModalOpen" class="modal">
+            <div class="modal-content">
+                <h3>Are you sure you want to delete this post?</h3>
+                <button @click="deletePost">Yes, Delete</button>
+                <button @click="closeDeleteModal">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Bulk Delete Confirmation Modal -->
+           <div v-if="isBulkDeleteModalOpen" class="modal">
+                <div class="modal-content">
+                    <h3>Are you sure you want to delete the selected posts?</h3>
+                    <button @click="deleteSelectedPosts">Yes, Delete</button>
+                    <button @click="closeBulkDeleteModal">Cancel</button>
+                </div>
+           </div>
     </div>
 </template>
 
@@ -36,7 +72,13 @@ export default {
             authorName: '',
             authorId: null,
             error: null,
+            editPost: {},
             selectedPosts: [],
+            isEditModalOpen: false,
+            isDeleteModalOpen: false,
+            isBulkDeleteModalOpen: false,
+            editedPost: null,  // Store the post being edited
+            postToDelete: null, // Store the post to delete
         };
     },
     mounted() {
@@ -57,6 +99,9 @@ export default {
                 if (response.data) {
                     this.posts = response.data.posts || [];
                     this.authorName = response.data.name || 'Unknown author';
+
+                    // Sort posts by createdAt date (most recent first)
+                    this.posts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                 } else {
                     this.error = 'No data returned from the server';
                 }
@@ -66,39 +111,72 @@ export default {
             }
         },
 
-        editPost(postId) {
-            if (postId) {
-                // Redirect to edit page or open edit modal
-                this.$router.push(`/edit-post/${postId}`);
-            } else {
-                console.error("Post ID is undefined");
-            }
+        openEditModal(post) {
+            this.editPost = { ...post }; // Create a copy of the post to edit
+            this.isEditModalOpen = true;
         },
 
-        confirmDeletePost(postId) {
-            if (confirm('Are you sure you want to delete this post?')) {
-                this.deletePost(postId);
-            }
+        closeEditModal() {
+            this.isEditModalOpen = false;
+            this.editPost = {};
         },
 
-        async deletePost(postId) {
-            try {
-                await axios.delete(`/api/posts/${postId}`);
-                // Remove the deleted post from the list of posts
-                this.posts = this.posts.filter(post => post.id !== postId);
-            } catch (error) {
-                console.error('Error deleting post: ', error);
-                alert('Failed to delete the post. Please try again.');
-            }
+        saveEdit() {
+            // Here send the request to the backend to update the post
+            axios.put(`http://localhost:8000/api/posts/${this.editPost.id}`, this.editPost)
+                .then(response => {
+                    // Update the post in the list of posts
+                    const postIndex = this.posts.findIndex(post => post.id === this.editPost.id);
+                    if (postIndex !== -1) {
+                        this.posts[postIndex] = { ...this.editPost };
+                    }
+                    this.closeEditModal();
+                }).catch (error => {
+                    console.error('Failed to update post:', error);
+                });
+        },
+
+        confirmDelete(post) {
+            this.postToDelete = post;
+            this.isDeleteModalOpen = true;
+        },
+
+        closeDeleteModal() {
+            this.isDeleteModalOpen = false;
+            this.postToDelete = null;
+        },
+
+        async deletePost() {
+            await axios.delete(`http://localhost:8000/api/posts/${this.postToDelete.id}`)
+                .then(response => {
+                    this.posts = this.posts.filter(post => post.id !== this.postToDelete.id);
+                    this.closeDeleteModal();
+                })
+                .catch(error => {
+                    console.error('Error deleting post:', error);
+                    //alert('Failed to delete the post. Please try again.');
+                });
+        },
+
+        confirmBulkDelete() {
+            this.isBulkDeleteModalOpen = true;
+        },
+
+        closeBulkDeleteModal() {
+            this.isBulkDeleteModalOpen = false;
         },
 
         async deleteSelectedPost() {
-            if (confirm('Are you sure you want to delete the selected posts?')) {
-                for (const postId of this.selectedPosts) {
-                    await this.deletePost(postId);
-                }
-                this.selectedPosts = []; // Reset selection
+            for (const postId of this.selectedPosts) {
+                axios.delete(`http://localhost:8000/api/posts/${postId}`)
+                    .then(() => {
+                        this.posts = this.posts.filter(post => post.id !== postId);
+                    }).catch(error => {
+                        console.error('Error Deleting Post.', error);
+                    });
             }
+            this.selectedPosts = [];
+            this.closeBulkDeleteModal();
         },
     },
 };
@@ -107,6 +185,7 @@ export default {
 <style scoped>
 .author-posts-container {
     max-width: 800px;
+    width: 90%;
     margin: 20px auto;
     padding: 20px;
     border: 1px solid #eaeaea;
@@ -195,4 +274,73 @@ h1 {
     background-color: #ccc;
     cursor: not-allowed;
 }
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    width: 90%;
+    color: #333;
+}
+
+h3 {
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+p {
+    font-weight: normal;
+}
+
+button {
+    margin-right: 10px;
+}
+
+/* Responsive styles */
+@media (max-width: 600px) {
+    h1 {
+        font-size: 1.5em; /* Smaller heading on mobile */
+    }
+
+    .post-card {
+        padding: 10px; /* Less padding on post cards */
+    }
+
+    .post-title {
+        font-size: 1.2em; /* Smaller title size */
+    }
+
+    .post-body {
+        font-size: 14px; /* Smaller body text */
+    }
+
+    .edit-button,
+    .delete-button {
+        font-size: 14px; /* Smaller button text */
+    }
+
+    .bulk-delete-button {
+        font-size: 14px; /* Smaller button text for bulk delete */
+    }
+
+    .modal-content {
+        padding: 15px; /* Less padding in modals on mobile */
+    }
+}
+
 </style>

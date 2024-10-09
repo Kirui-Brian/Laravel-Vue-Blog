@@ -44,6 +44,7 @@ export default {
 <style scoped>
 .post-details-container {
     max-width: 1000px;
+    width: 90%;
     margin: 20px auto;
     padding: 20px;
     border: 1px solid #eaeaea;
@@ -85,5 +86,30 @@ strong {
     border-radius: 3px;
     background-color: #00fb;
     color: rgb(44, 42, 42);
+}
+
+/* Responsive styles */
+@media (max-width: 600px) {
+    h1 {
+        font-size: 2em; /* Smaller heading size for mobile */
+    }
+
+    .post-details-container {
+        padding: 15px; /* Less padding for smaller screens */
+    }
+
+    strong {
+        font-size: 16px; /* Adjusted font size for strong text */
+    }
+
+    .router-link {
+        font-size: 14px; /* Smaller link text */
+    }
+
+    .tag {
+        padding: 4px 8px; /* Smaller padding for tags */
+        margin: 4px; /* Adjusted margin for tags */
+        font-size: 14px; /* Smaller font size for tags */
+    }
 }
 </style>

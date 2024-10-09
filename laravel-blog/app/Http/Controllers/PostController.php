@@ -57,7 +57,10 @@ class PostController extends Controller
     // Update a specific post
     public function update(Request $request, string $id)
     {
-        $post = Post::findOrFail($id);
+        $post = Post::find($id);
+        if (!$post) {
+            return response()->json(['message' => 'Post not found'], 404);
+        }
 
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
@@ -67,13 +70,14 @@ class PostController extends Controller
             'tags.*' => 'exists:tags,id',
         ]);
 
-        $post->update($validated);
+        $post->update($request->all());
 
         if (isset($validated['tags'])) {
             $post->tags()->sync($validated['tags']);
         }
 
-        return response()->json($post);
+        return response()->json(['message' => 'Post updated successfully', 'post' => $post], 200);
+
     }
 
     // Delete a specific post

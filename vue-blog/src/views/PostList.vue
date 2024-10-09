@@ -47,6 +47,8 @@ export default {
                 const response = await axios.get('http://localhost:8000/api/posts');
                 this.posts = response.data;
                 //console.log(this.posts);
+
+                this.posts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             } catch (error) {
                 console.error('Error fetching posts: ' + error);
             }

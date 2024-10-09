@@ -134,9 +134,10 @@ export default {
 
 <style scoped>
 .post-form {
-    width: 800px;
-    height: 600px;
-    margin: 0 auto;
+    max-width: 800px;
+    width: 90%;
+    height: auto;
+    margin: 20px auto;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -220,5 +221,28 @@ label {
     color: red;
     text-align: center;
     margin-top: 10px;
+}
+
+/* Responsive styles */
+@media (max-width: 600px) {
+    .post-form {
+        padding: 15px; /* Reduce padding for smaller screens */
+        margin: 10px; /* Reduce margin */
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+        font-size: 14px; /* Smaller font for inputs */
+    }
+
+    .submit-button {
+        font-size: 14px; /* Smaller button text */
+    }
+
+    .success-message,
+    .error-message {
+        font-size: 16px; /* Adjust size for success/error messages */
+    }
 }
 </style>
