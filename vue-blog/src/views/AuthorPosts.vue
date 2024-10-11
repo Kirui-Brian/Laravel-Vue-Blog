@@ -107,7 +107,9 @@ export default {
                 }
             } catch (error) {
                 console.error('Error fetching author posts: ' + error);
-                this.error = 'An error occurred while fetching posts.';
+                this.error = error.response?.status === 404
+                    ? 'Posts not found for this author.'
+                    : 'An error occurred while fetching posts.';
             }
         },
 
@@ -166,17 +168,21 @@ export default {
             this.isBulkDeleteModalOpen = false;
         },
 
-        async deleteSelectedPost() {
-            for (const postId of this.selectedPosts) {
-                axios.delete(`http://localhost:8000/api/posts/${postId}`)
-                    .then(() => {
-                        this.posts = this.posts.filter(post => post.id !== postId);
-                    }).catch(error => {
-                        console.error('Error Deleting Post.', error);
-                    });
-            }
-            this.selectedPosts = [];
-            this.closeBulkDeleteModal();
+        async deleteSelectedPosts() {
+            try {
+                for (const postId of this.selectedPosts) {
+                    axios.delete(`http://localhost:8000/api/posts/${postId}`)
+                        .then(() => {
+                            this.posts = this.posts.filter(post => post.id !== postId);
+                            }).catch(error => {
+                                console.error('Error Deleting Post.', error);
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error deleting selected posts:', error);
+                        }
+                        this.selectedPosts = [];
+                        this.closeBulkDeleteModal();
         },
     },
 };
@@ -309,6 +315,20 @@ p {
 
 button {
     margin-right: 10px;
+}
+
+p[v-else-if="!error"] {
+    font-size: 1.2em;
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    margin-top: 20px;
+    opacity: 0.9;
+}
+
+p[v-else-if="!error"]:hover {
+    color: #333;
+    opacity: 1;
 }
 
 /* Responsive styles */
