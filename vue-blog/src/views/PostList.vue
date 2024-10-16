@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import apiClient from "@/axios";
 
 export default {
     name: 'PostList',
@@ -44,9 +44,15 @@ export default {
     methods: {
         async fetchPosts() {
             try {
-                const response = await axios.get('http://localhost:8000/api/posts');
+                const response = await apiClient.get('/posts', {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('auth_token')}` // Include the token
+                    },
+                });
+
+                console.log('Fetched Posts: ' + response.data);
                 this.posts = response.data;
-                //console.log(this.posts);
+                console.log(this.posts);
 
                 this.posts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             } catch (error) {

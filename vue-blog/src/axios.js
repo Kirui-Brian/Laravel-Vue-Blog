@@ -10,10 +10,11 @@ const apiClient = axios.create({
 });
 
 // Add a request interceptor to include the token in requests
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use(
+    (config) => {
     const token = localStorage.getItem('auth_token');
     if (token) {
-        config.headers['Authorization'] = `Bearer  ${token}`;
+        config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;
 }, (error) => {
@@ -21,14 +22,17 @@ apiClient.interceptors.request.use((config) => {
 });
 
 // Add a response interceptor to handle token expiry globally
-apiClient.interceptors.response.use((response) => {
+apiClient.interceptors.response.use(
+    (response) => {
     return response;
-}, (error) => {
-    const router = useRouter();
+}, 
+(error) => {
     if (error.response && error.response.status === 401) {
         // Token is expired or invalid - log out the user
-        localStorage.removeItem('auth_token');   
+        const router = useRouter();
+        localStorage.removeItem('auth_token');
         router.push({ name: 'Login' }); // Redirect to login
+        alert('Session has expired. Please login again.');
     }
     return Promise.reject(error);
 });

@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import apiClient from "@/axios";
 
 export default {
     name: 'PostDetails',
@@ -30,7 +30,7 @@ export default {
     methods: {
         async fetchPost() {
             try {
-                const response = await axios.get(`http://localhost:8000/api/posts/${this.id}`);
+                const response = await apiClient.get(`http://localhost:8000/api/posts/${this.id}`);
                 this.post = response.data;
             } catch (error) {
                 console.error('Error fetching posts', error);

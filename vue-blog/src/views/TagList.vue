@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import apiClient from '@/axios';
 
 export default {
     name: 'Tags',
@@ -23,7 +23,7 @@ export default {
     methods: {
         async fetchTags() {
             try {
-                const response = await axios.get('http://localhost:8000/api/tags');
+                const response = await apiClient.get('http://localhost:8000/api/tags');
                 this.tags = response.data.data;
             } catch (error) {
                 console.error('Error fetching tags:', error);

@@ -29,14 +29,15 @@
          <div v-if="isEditModalOpen" class="modal">
             <div class="modal-content">
                 <h3>Edit Post</h3>
-                <label for="edit-title">Title:</label>
-                <input v-model="editPost.title" id="edit-title">
+                <label for="edit-title" class="label">Title:</label>
+                <input v-model="editPost.title" id="edit-title" class="input-field" placeholder="Enter Post Title..">
 
-                <label for="edit-body">Body</label>
-                <textarea v-model="editPost.body" id="edit-body"></textarea>
-
-                <button @click="saveEdit" >Save Changes</button>
-                <button @click="closeEditModal" >Cancel</button>
+                <label for="edit-body" class="label">Body</label>
+                <textarea v-model="editPost.body" id="edit-body" class="textarea-field" placeholder="Write your post content..."></textarea>
+                <div class="modal-buttons">
+                    <button @click="saveEdit" class="save-button">Save Changes</button>
+                    <button @click="closeEditModal" class="cancel-button">Cancel</button>
+                </div>
             </div>
          </div>
 
@@ -61,7 +62,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import apiClient from '@/axios';
 
 export default {
     name: 'AuthorPosts',
@@ -93,7 +94,7 @@ export default {
         async fetchAuthorPosts(authorID) {
             try {
                 //console.log('Fetching posts for author ID:', this.authorId);
-                const response = await axios.get(`http://localhost:8000/api/authors/${this.authorId}/posts`);
+                const response = await apiClient.get(`/authors/${this.authorId}/posts`);
 
                 // Check if the response contains data
                 if (response.data) {
@@ -125,7 +126,7 @@ export default {
 
         saveEdit() {
             // Here send the request to the backend to update the post
-            axios.put(`http://localhost:8000/api/posts/${this.editPost.id}`, this.editPost)
+            apiClient.put(`/posts/${this.editPost.id}`, this.editPost)
                 .then(response => {
                     // Update the post in the list of posts
                     const postIndex = this.posts.findIndex(post => post.id === this.editPost.id);
@@ -149,7 +150,7 @@ export default {
         },
 
         async deletePost() {
-            await axios.delete(`http://localhost:8000/api/posts/${this.postToDelete.id}`)
+            await apiClient.delete(`/posts/${this.postToDelete.id}`)
                 .then(response => {
                     this.posts = this.posts.filter(post => post.id !== this.postToDelete.id);
                     this.closeDeleteModal();
@@ -171,7 +172,7 @@ export default {
         async deleteSelectedPosts() {
             try {
                 for (const postId of this.selectedPosts) {
-                    axios.delete(`http://localhost:8000/api/posts/${postId}`)
+                    apiClient.delete(`/posts/${postId}`)
                         .then(() => {
                             this.posts = this.posts.filter(post => post.id !== postId);
                             }).catch(error => {
@@ -302,6 +303,67 @@ h1 {
     max-width: 500px;
     width: 90%;
     color: #333;
+}
+
+.label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.input-field,
+.textarea-field {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.input-field:focus,
+.textarea-field:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.textarea-field {
+    height: 100px;
+    resize: none;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+.save-button,
+.cancel-button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16;
+    transition: background-color 0.3s;
+}
+
+.save-button {
+    background-color: #007bff;
+    color: white;
+}
+
+.cancel-button {
+    background-color: #f44336;
+    color: white;
+}
+
+.save-button:hover {
+    background-color: #0056b3;
+}
+
+.cancel-button:hover {
+    background-color: #c62828;
 }
 
 h3 {
