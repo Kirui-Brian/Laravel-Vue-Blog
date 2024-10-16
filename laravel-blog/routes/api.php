@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\PostTagController;
+use App\Http\Controllers\AuthController;
 
 // Authors Routes
 Route::prefix('authors')->group(function () {
@@ -39,3 +40,18 @@ Route::prefix('posts/{postId}/tags')->group(function () {
     Route::post('{tagId}', [PostTagController::class, 'attach']); // Attach a tag to a post
     Route::delete('{tagId}', [PostTagController::class, 'detach']); // Detach a tag from a post
 });
+
+// Authentication Routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+
+// Securing Routes
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/posts', [PostController::class, 'index']);
+    Route::post('/posts', [PostController::class, 'store']);
+    Route::put('/posts/{id}', [PostController::class, 'update']);
+    Route::delete('/posts/{id}', [PostController::class, 'destroy']);
+});
+
+
