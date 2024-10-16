@@ -59,75 +59,105 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { ref, onMounted } from 'vue'; // Importing necessary functions from Vue
+import { useRouter } from 'vue-router'; // Importing useRouter for navigation
+import apiClient from '@/axios'; // Importing axios client
 
 export default {
     name: 'PostForm',
-    data() {
-        return {
-            title: '',
-            body: '',
-            author_id: '',
-            tags: [],
-            authors: [],
-            selectedTags: [],
-            isSubmitting: false,
-            successMessage: '',
-            errorMessage: ''
-        };
-    },
-    created() {
-        this.loadAuthors();
-        this.loadTags();
-    },
-    methods: {
-        loadAuthors() {
-            axios.get('http://localhost:8000/api/authors')
+    setup() {
+        const router = useRouter(); // Get the router instance
+        // Defining reactive state variables
+        const title = ref('');
+        const body = ref('');
+        const author_id = ref('');
+        const tags = ref([]);
+        const authors = ref([]);
+        const selectedTags = ref([]);
+        const isSubmitting = ref(false);
+        const successMessage = ref('');
+        const errorMessage = ref('');
+
+        // Method to load authors
+        const loadAuthors = () => {
+            apiClient.get('/authors')
                 .then(response => {
-                    this.authors = response.data;
-                }).catch(error => {
+                    authors.value = response.data; // Update authors state
+                })
+                .catch(error => {
                     console.error('Error loading authors:', error);
                 });
-        },
-        loadTags() {
-            axios.get('http://127.0.0.1:8000/api/tags')
+        };
+
+        // Method to load tags
+        const loadTags = () => {
+            apiClient.get('/tags')
                 .then(response => {
-                    this.tags = response.data;
-                }).catch(error => {
+                    tags.value = response.data; // Update tags state
+                })
+                .catch(error => {
                     console.error("Error loading tags: ", error);
                 });
-        },
-        createPost() {
-            this.isSubmitting = true; // Disable the button
+        };
 
-            axios.post('http://127.0.0.1:8000/api/posts', {
-                title: this.title,
-                body: this.body,
-                author_id: this.author_id,
-                tags: this.selectedTags
-            }).then(response => {
-                this.successMessage = 'Post created successfully!';
-                this.resetForm();
-                this.errorMessage = ''; // Reset error message on success
+        // Method to create a post
+        const createPost = () => {
+            isSubmitting.value = true; // Disable the button
 
-                // Set timeout to reset the success message after 2 seconds
+            apiClient.post('/posts', {
+                title: title.value,
+                body: body.value,
+                author_id: author_id.value,
+                tags: selectedTags.value
+            })
+            .then(response => {
+                successMessage.value = 'Post created successfully!';
+                resetForm(); // Reset form fields
+                errorMessage.value = ''; // Reset error message on success
+
+                // Set timeout to redirect to /postlist after 2 seconds
                 setTimeout(() => {
-                    this.successMessage = '';
+                    successMessage.value = ''; // Clear success message
+                    router.push({ name: 'PostList' }); // Redirect to /postlist
                 }, 2000);
-            }).catch(error => {
+            })
+            .catch(error => {
                 console.error(error);
-                this.errorMessage = 'Failed to create post. Please try again.'; // Display error message
-                this.successMessage = ''; // Reset success message on error
-            }).finally(() => {
-                this.isSubmitting = false; // Re-enable the button
+                errorMessage.value = 'Failed to create post. Please try again.'; // Display error message
+                successMessage.value = ''; // Reset success message on error
+            })
+            .finally(() => {
+                isSubmitting.value = false; // Re-enable the button
             });
-        },
-        resetForm() {
-            this.title = '';
-            this.body = '';
-            this.author_id = '';
-            this.selectedTags = [];
-        }
+        };
+
+        // Method to reset form fields
+        const resetForm = () => {
+            title.value = '';
+            body.value = '';
+            author_id.value = '';
+            selectedTags.value = [];
+        };
+
+        // Lifecycle hook to load authors and tags on component mount
+        onMounted(() => {
+            loadAuthors(); // Load authors when the component is created
+            loadTags(); // Load tags when the component is created
+        });
+
+        // Return all reactive variables and methods to the template
+        return {
+            title,
+            body,
+            author_id,
+            tags,
+            authors,
+            selectedTags,
+            isSubmitting,
+            successMessage,
+            errorMessage,
+            createPost
+        };
     }
 };
 </script>
