@@ -45,8 +45,10 @@
           <div v-if="isDeleteModalOpen" class="modal">
             <div class="modal-content">
                 <h3>Are you sure you want to delete this post?</h3>
-                <button @click="deletePost">Yes, Delete</button>
-                <button @click="closeDeleteModal">Cancel</button>
+                <div class="modal-buttons">
+                    <button @click="deletePost" class="cancel-button">Yes, Delete</button>
+                    <button @click="closeDeleteModal" class="save-button">Cancel</button>
+                </div>
             </div>
           </div>
 
