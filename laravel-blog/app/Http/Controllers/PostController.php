@@ -14,7 +14,7 @@ class PostController extends Controller
     // Get all posts
      public function index()
     {
-        $posts = Post::with(['author', 'tags'])->latest()->get();
+        $posts = Post::with(['author', 'tags'])->latest()->get()->paginate(10);
         return response()->json($posts);
         // return Post::all();
     }
