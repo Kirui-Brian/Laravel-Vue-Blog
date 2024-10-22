@@ -25,6 +25,15 @@
                 <span v-else>No Tags Available</span>
             </p>
         </div>
+        <button @click="fetchPosts(pagination.prev_page_url)" :disabled="!pagination.prev_page_url">
+            Previous
+        </button>
+        <button @click="fetchPosts(pagination.next_page_url)" :disabled="!pagination.next_page_url">
+            Next
+        </button>
+
+        <!-- Showing current page and total pages -->
+         <p>Page {{ pagination.current_page }} of {{ pagination.last_page }}</p>
     </div>
 </template>
 
@@ -36,27 +45,43 @@ export default {
     data() {
         return {
             posts: [],
+            pagination: {
+                prev_page_url: null,
+                next_page_url: null,
+                current_page: 1,
+            },
         };
     },
     mounted() {
         this.fetchPosts();
     },
     methods: {
-        async fetchPosts() {
+        async fetchPosts(pageUrl = '/posts') {
             try {
-                const response = await apiClient.get('/posts', {
+                const response = await apiClient.get(pageUrl, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('auth_token')}` // Include the token
                     },
                 });
 
-                console.log('Fetched Posts: ' + response.data);
-                this.posts = response.data;
-                console.log(this.posts);
-
+                // Set the posts and sort by creation date.
+                this.posts = response.data.data;
                 this.posts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                // Update pagination details
+                this.pagination = {
+                    prev_page_url: response.data.prev_page_url,
+                    next_page_url: response.data.next_page_url,
+                    current_page: response.data.current_page,
+                    last_page: response.data.last_page,
+                    total: response.data.total,
+                    per_page: response.data.per_page
+                };
+
+                console.log('Pagination Info: ', this.pagination);
+
             } catch (error) {
-                console.error('Error fetching posts: ' + error);
+                console.error('Error fetching posts: ', error);
             }
         },
     },
@@ -78,6 +103,10 @@ h1 {
     color: #333;
     font-size: 32px;
     font-weight: bold;
+}
+
+p {
+    color: black;
 }
 
 .post-card {
